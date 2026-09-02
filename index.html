@@ -1,57 +1,30 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <title>Production Plan & Actual Dashboard</title>
-    <!-- ใช้ Bootstrap เพื่อความสวยงาม -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <h2 class="mb-4 text-center">📊 ระบบติดตามแผนการผลิต (Plan / Actual / Balance)</h2>
-        
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <table class="table table-bordered table-hover align-middle">
-                    <thead class="table-dark text-center">
-                        <tr>
-                            <th>รหัสสินค้า</th>
-                            <th>Plan (แผน)</th>
-                            <th>Actual (จริง)</th>
-                            <th>Variance (+/-)</th>
-                            <th>Balance (ค้างผลิต)</th>
-                            <th>จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in data %}
-                        <tr>
-                            <td class="fw-bold">{{ row.product }}</td>
-                            <td class="text-end">{{ "{:,}".format(row.plan) }}</td>
-                            <td class="text-end">
-                                <!-- ฟอร์มสำหรับอัปเดตยอด Actual แบบ Real-time -->
-                                <form action="/update" method="POST" class="d-flex justify-content-end gap-2">
-                                    <input type="hidden" name="id" value="{{ row.id }}">
-                                    <input type="number" name="actual" value="{{ row.actual }}" class="form-control form-control-sm text-end" style="width: 100px;" required>
-                            </td>
-                            <td class="text-center">
-                                {% if row.variance < 0 %}
-                                    <span class="text-danger fw-bold">{{ "{:,}".format(row.variance) }}</span>
-                                {% else %}
-                                    <span class="text-success fw-bold">+{{ "{:,}".format(row.variance) }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-end text-primary fw-bold">{{ "{:,}".format(row.balance) }}</td>
-                            <td class="text-center">
-                                    <button type="submit" class="btn btn-sm btn-primary">อัปเดต</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+import cv2
+
+# เปิดกล้องเว็บแคม
+cap = cv2.VideoCapture(0)
+
+print("--- ระบบถ่ายภาพต้นแบบ ---")
+print("1. วางชิ้นงาน OK ที่สมบูรณ์ไว้ใต้กล้องและจัดแสงให้คงที่")
+print("2. กดปุ่ม 'c' บนคีย์บอร์ดเพื่อบันทึกภาพ")
+print("3. กดปุ่ม 'q' เพื่อปิดโปรแกรม")
+
+while True:
+  ret, frame = cap.read()
+  if not ret:
+    print("ไม่สามารถเชื่อมต่อกล้องได้")
+    break
+
+  # แสดงภาพสดจากกล้อง
+  cv2.imshow("Capture Template - Press 'c' to Save", frame)
+
+  key = cv2.waitKey(1) & 0xFF
+  if key == ord("c"):
+    # แปลงเป็นภาพขาวดำหรือใช้ภาพสีก็ได้ (ในที่นี้ใช้ภาพสีหรือตัดเฉพาะส่วน)
+    cv2.imwrite("template_ok.jpg", frame)
+    print("บันทึกภาพสำเร็จ! ได้ไฟล์ 'template_ok.jpg' เรียบร้อยแล้ว")
+    break
+  elif key == ord("q"):
+    break
+
+cap.release()
+cv2.destroyAllWindows()
