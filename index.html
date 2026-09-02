@@ -19,7 +19,7 @@ while True:
 
   key = cv2.waitKey(1) & 0xFF
   if key == ord("c"):
-    # แปลงเป็นภาพขาวดำหรือใช้ภาพสีก็ได้ (ในที่นี้ใช้ภาพสีหรือตัดเฉพาะส่วน)
+    # บันทึกภาพเก็บไว้เป็นไฟล์มาตรฐาน
     cv2.imwrite("template_ok.jpg", frame)
     print("บันทึกภาพสำเร็จ! ได้ไฟล์ 'template_ok.jpg' เรียบร้อยแล้ว")
     break
