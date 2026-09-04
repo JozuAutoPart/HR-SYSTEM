@@ -2,50 +2,63 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบสแกนเข้า-ออกงาน</title>
+    <title>ระบบสแกนใบหน้าเข้า-ออกงาน</title>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 400px; text-align: center; }
+        video { width: 100%; border-radius: 8px; background: #000; }
+        .profile-card { display: none; margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+        .profile-card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
+        .btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; width: 100%; }
+        .btn:hover { background: #218838; }
+    </style>
 </head>
 <body>
-    <h2>บันทึกเวลาทำงาน</h2>
-    <input type="text" id="emp_id" placeholder="รหัสพนักงาน">
-    <br><br>
-    <button onclick="checkIn('IN')">เข้างาน</button>
-    <button onclick="checkIn('OUT')">1ออกงาน</button>
 
-    <script>
-        function checkIn(type) {
-            const empId = document.getElementById('emp_id').value;
-            if (!empId) {
-                alert('กรุณากรอกรหัสพนักงาน');
-                return;
-            }
+<div class="container">
+    <h2>สแกนใบหน้าพนักงาน</h2>
+    <video id="video" autoplay playsinline></video>
+    <button class="btn" onclick="simulateScan()">จำลองสแกนใบหน้า</button>
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
+    <div id="profileCard" class="profile-card">
+        <img id="empPhoto" src="" alt="รูปพนักงาน">
+        <h3 id="empName">ชื่อพนักงาน</h3>
+        <p id="empDept">แผนก: -</p>
+        <button class="btn" onclick="saveAttendance()">กดบันทึกสำเร็จ (เข้างาน)</button>
+    </div>
+</div>
 
-                    // ส่งข้อมูลไปยัง Backend (เช่น PHP / Node.js)
-                    sendDataToBackend(empId, type, lat, lon);
-                }, error => {
-                    alert('ไม่สามารถดึงพิกัด GPS ได้ กรุณาเปิด Location');
-                });
-            } else {
-                alert('เบราว์เซอร์ไม่รองรับระบบระบุพิกัด');
-            }
-        }
+<script>
+    // เปิดกล้องเว็บแคม
+    const video = document.getElementById('video');
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => { console.error("ไม่สามารถเปิดกล้องได้: ", err); });
 
-        function sendDataToBackend(empId, type, lat, lon) {
-            // ตัวอย่างการส่งข้อมูลด้วย Fetch API
-            fetch('save_attendance.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ employee_id: empId, type: type, latitude: lat, longitude: lon })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
-            });
-        }
-    </script>
+    // จำลองการสแกนใบหน้าสำเร็จและดึงข้อมูลพนักงานขึ้นมา
+    function simulateScan() {
+        // ข้อมูลจำลองที่ได้จากการสแกนผ่านระบบ AI/Face Recognition Backend
+        const mockEmployee = {
+            id: "EMP001",
+            name: "นายสมชาย ใจดี",
+            department: "Developer",
+            photo: "https://via.placeholder.com/80"
+        };
+
+        // แสดงผลข้อมูลพนักงาน
+        document.getElementById('empName').innerText = mockEmployee.name;
+        document.getElementById('empDept').innerText = "แผนก: " + mockEmployee.department;
+        document.getElementById('empPhoto').src = mockEmployee.photo;
+        document.getElementById('profileCard').style.display = 'block';
+    }
+
+    // ฟังก์ชันบันทึกข้อมูลลงฐานข้อมูล
+    function saveAttendance() {
+        alert("บันทึกเวลาสำเร็จเรียบร้อยแล้ว!");
+        // รีเซ็ตหน้าจอเตรียมพร้อมให้คนถัดไปสแกน
+        document.getElementById('profileCard').style.display = 'none';
+    }
+</script>
+
 </body>
 </html>
