@@ -2,62 +2,225 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบสแกนใบหน้าเข้า-ออกงาน</title>
+    <title>Spot Welding System</title>
+    <!-- Bootstrap 5 CSS สำหรับความสวยงาม -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Sarabun', sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 400px; text-align: center; }
-        video { width: 100%; border-radius: 8px; background: #000; }
-        .profile-card { display: none; margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
-        .profile-card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
-        .btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; width: 100%; }
-        .btn:hover { background: #218838; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { min-height: 100vh; background: #343a40; color: white; }
+        .nav-link { color: #adb5bd; cursor: pointer; }
+        .nav-link.active, .nav-link:hover { color: white; background: #495057; border-radius: 5px; }
+        .card-status { font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>สแกนใบหน้าพนักงาน</h2>
-    <video id="video" autoplay playsinline></video>
-    <button class="btn" onclick="simulateScan()">จำลองสแกนใบหน้า</button>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar เมนูด้านซ้าย -->
+        <div class="col-md-3 col-lg-2 sidebar p-3">
+            <h4 class="text-center py-3">Spot Welding</h4>
+            <hr>
+            <ul class="nav flex-column gap-2">
+                <li class="nav-item">
+                    <a class="nav-link active" onclick="switchPage('setupPage')" id="menu-setup">1. Set-Up Condition</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="switchPage('qcPage')" id="menu-qc">2. หน้า QC (ตรวจสอบ)</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="switchPage('prodPage')" id="menu-prod">3. บันทึกการผลิต</a>
+                </li>
+            </ul>
+        </div>
 
-    <div id="profileCard" class="profile-card">
-        <img id="empPhoto" src="" alt="รูปพนักงาน">
-        <h3 id="empName">ชื่อพนักงาน</h3>
-        <p id="empDept">แผนก: -</p>
-        <button class="btn" onclick="saveAttendance()">กดบันทึกสำเร็จ (เข้างาน)</button>
+        <!-- เนื้อหาหลักแต่ละหน้า -->
+        <div class="col-md-9 col-lg-10 p-4">
+            
+            <!-- Global Status Bar (แสดงสถานะปัจจุบันให้เห็นทุกหน้า) -->
+            <div class="alert alert-secondary d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <strong>สถานะระบบล่าสุด:</strong> <span id="globalStatus" class="badge bg-secondary">-</span>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-dark" onclick="loadSystemStatus()">🔄 รีเฟรชสถานะ</button>
+                </div>
+            </div>
+
+            <!-- ================= หน้าที่ 1: Set-Up Welding Condition ================= -->
+            <div id="setupPage" class="page-section">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">หน้า Set-Up Welding Condition</div>
+                    <div class="card-body">
+                        <form id="setupForm" onsubmit="submitSetup(event)">
+                            <div class="mb-3">
+                                <label class="form-label">Welding Current (kA)</label>
+                                <input type="number" step="0.1" class="form-control" id="setupCurrent" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Welding Time (Cycles)</label>
+                                <input type="number" class="form-control" id="setupTime" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Pressure (kN)</label>
+                                <input type="number" step="0.1" class="form-control" id="setupPressure" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">บันทึกและส่งให้ QC อนุมัติ</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= หน้าที่ 2: หน้า QC ================= -->
+            <div id="qcPage" class="page-section" style="display: none;">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">หน้า QC (ตรวจสอบและอนุมัติ)</div>
+                    <div class="card-body">
+                        <h5>ค่า Set-Up ล่าสุดที่รอการตรวจสอบ:</h5>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item"><strong>Current:</strong> <span id="qcCurrent">-</span> kA</li>
+                            <li class="list-group-item"><strong>Time:</strong> <span id="qcTime">-</span> Cycles</li>
+                            <li class="list-group-item"><strong>Pressure:</strong> <span id="qcPressure">-</span> kN</li>
+                            <li class="list-group-item"><strong>Status ปัจจุบัน:</strong> <span id="qcStatusBadge" class="badge bg-secondary">-</span></li>
+                        </ul>
+
+                        <div class="mb-3">
+                            <label class="form-label">หมายเหตุ / เหตุผล (กรณีไม่อนุมัติ):</label>
+                            <input type="text" class="form-control" id="qcNote" placeholder="ระบุหมายเหตุ...">
+                        </div>
+
+                        <button class="btn btn-success me-2" onclick="processQC('Approved')">✔️ อนุมัติ (Approve)</button>
+                        <button class="btn btn-danger" onclick="processQC('Rejected')">❌ ไม่อนุมัติ (Reject)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= หน้าที่ 3: หน้าบันทึกการผลิต ================= -->
+            <div id="prodPage" class="page-section" style="display: none;">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">หน้าบันทึกการผลิต (Production)</div>
+                    <div class="card-body">
+                        <!-- แจ้งเตือนกรณีล็อค -->
+                        <div id="lockedAlert" class="alert alert-danger" style="display: none;">
+                            ⚠️ <strong>ยังไม่สามารถบันทึกการผลิตได้!</strong> กรุณารอให้ QC ทำการอนุมัติค่า Set-Up ในระบบก่อน
+                        </div>
+
+                        <!-- ฟอร์มบันทึกการผลิต -->
+                        <form id="prodForm" onsubmit="submitProduction(event)">
+                            <div class="mb-3">
+                                <label class="form-label">จำนวนชิ้นงานที่ผลิตได้ (Qty)</label>
+                                <input type="number" class="form-control prod-input" id="prodQty" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">ชื่อผู้ปฏิบัติงาน (Operator)</label>
+                                <input type="text" class="form-control prod-input" id="prodOperator" required>
+                            </div>
+                            <button type="submit" class="btn btn-success prod-input" id="btnSubmitProd">บันทึกผลการผลิต</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 </div>
 
+<!-- JavaScript ควบคุมหน้าเว็บและการสื่อสารกับ Apps Script -->
 <script>
-    // เปิดกล้องเว็บแคม
-    const video = document.getElementById('video');
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => { video.srcObject = stream; })
-        .catch(err => { console.error("ไม่สามารถเปิดกล้องได้: ", err); });
+    // ฟังก์ชันสลับหน้าจอ (Tab Navigation)
+    function switchPage(pageId) {
+        document.querySelectorAll('.page-section').forEach(el => el.style.display = 'none');
+        document.getElementById(pageId).style.display = 'block';
 
-    // จำลองการสแกนใบหน้าสำเร็จและดึงข้อมูลพนักงานขึ้นมา
-    function simulateScan() {
-        // ข้อมูลจำลองที่ได้จากการสแกนผ่านระบบ AI/Face Recognition Backend
-        const mockEmployee = {
-            id: "EMP001",
-            name: "นายสมชาย ใจดี",
-            department: "Developer",
-            photo: "https://via.placeholder.com/80"
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+        if(pageId === 'setupPage') document.getElementById('menu-setup').classList.add('active');
+        if(pageId === 'qcPage') document.getElementById('menu-qc').classList.add('active');
+        if(pageId === 'prodPage') {
+            document.getElementById('menu-prod').classList.add('active');
+            loadSystemStatus(); // โหลดเช็คสถานะใหม่ทุกครั้งที่กดเข้าหน้าผลิต
+        }
+    }
+
+    // โหลดข้อมูลสถานะล่าสุดจาก Backend มาอัปเดตหน้าจอ
+    function loadSystemStatus() {
+        google.script.run.withSuccessHandler(function(data) {
+            // อัปเดต Global Status Bar
+            let badgeClass = 'bg-secondary';
+            if(data.status === 'Pending') badgeClass = 'bg-warning text-dark';
+            if(data.status === 'Approved') badgeClass = 'bg-success';
+            if(data.status === 'Rejected') badgeClass = 'bg-danger';
+
+            document.getElementById('globalStatus').innerHTML = `<span class="badge ${badgeClass}">${data.status}</span>`;
+            document.getElementById('globalStatus').className = badgeClass;
+
+            // หน้า QC Binding
+            document.getElementById('qcCurrent').innerText = data.current;
+            document.getElementById('qcTime').innerText = data.time;
+            document.getElementById('qcPressure').innerText = data.pressure;
+            document.getElementById('qcStatusBadge').innerText = data.status;
+            document.getElementById('qcStatusBadge').className = "badge " + badgeClass;
+
+            // หน้า Production (เช็คเงื่อนไขล็อคฟอร์ม)
+            let isApproved = (data.status === 'Approved');
+            let lockedAlert = document.getElementById('lockedAlert');
+            let prodInputs = document.querySelectorAll('.prod-input');
+
+            if (!isApproved) {
+                lockedAlert.style.display = 'block';
+                prodInputs.forEach(el => el.disabled = true); // ปิดการใช้งานฟอร์ม
+            } else {
+                lockedAlert.style.display = 'none';
+                prodInputs.forEach(el => el.disabled = false); // เปิดให้ใช้งานฟอร์มปกติ
+            }
+        }).getLatestJobData();
+    }
+
+    // 1. กดส่งค่า Set-Up
+    function submitSetup(e) {
+        e.preventDefault();
+        let data = {
+            current: document.getElementById('setupCurrent').value,
+            time: document.getElementById('setupTime').value,
+            pressure: document.getElementById('setupPressure').value
         };
 
-        // แสดงผลข้อมูลพนักงาน
-        document.getElementById('empName').innerText = mockEmployee.name;
-        document.getElementById('empDept').innerText = "แผนก: " + mockEmployee.department;
-        document.getElementById('empPhoto').src = mockEmployee.photo;
-        document.getElementById('profileCard').style.display = 'block';
+        google.script.run.withSuccessHandler(function(res) {
+            alert(res.message);
+            document.getElementById('setupForm').reset();
+            loadSystemStatus();
+            switchPage('qcPage'); // เด้งไปหน้า QC อัตโนมัติเพื่อให้ตรวจสอบ
+        }).saveSetupCondition(data);
     }
 
-    // ฟังก์ชันบันทึกข้อมูลลงฐานข้อมูล
-    function saveAttendance() {
-        alert("บันทึกเวลาสำเร็จเรียบร้อยแล้ว!");
-        // รีเซ็ตหน้าจอเตรียมพร้อมให้คนถัดไปสแกน
-        document.getElementById('profileCard').style.display = 'none';
+    // 2. QC กดอนุมัติ/ไม่อนุมัติ
+    function processQC(status) {
+        let note = document.getElementById('qcNote').value;
+        google.script.run.withSuccessHandler(function(res) {
+            alert(res.message);
+            loadSystemStatus();
+        }).updateQCStatus(status, note);
     }
+
+    // 3. บันทึกการผลิต
+    function submitProduction(e) {
+        e.preventDefault();
+        let prodData = {
+            qty: document.getElementById('prodQty').value,
+            operator: document.getElementById('prodOperator').value
+        };
+
+        google.script.run.withSuccessHandler(function(res) {
+            alert(res.message);
+            if(res.success) {
+                document.getElementById('prodForm').reset();
+            }
+        }).saveProductionData(prodData);
+    }
+
+    // โหลดเช็คสถานะครั้งแรกเมื่อเปิดหน้าเว็บ
+    window.onload = function() {
+        loadSystemStatus();
+    };
 </script>
 
 </body>
