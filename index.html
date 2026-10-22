@@ -62,3 +62,198 @@
             <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold text-gray-500 uppercase">ผลิตจริงรวม (Actual)</span>
+                    <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fa-solid fa-industry"></i></span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="kpiActual" class="text-2xl font-bold text-gray-800">0</span>
+                    <span class="text-xs text-gray-500">ชิ้น</span>
+                </div>
+            </div>
+
+            <!-- OK Card -->
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">งานดี (OK Qty)</span>
+                    <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i class="fa-solid fa-circle-check"></i></span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="kpiOK" class="text-2xl font-bold text-emerald-600">0</span>
+                    <span class="text-xs text-gray-500">ชิ้น</span>
+                </div>
+            </div>
+
+            <!-- NG Card -->
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">งานเสีย (NG / Defect)</span>
+                    <span class="p-2 bg-rose-50 text-rose-600 rounded-lg"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <div>
+                        <span id="kpiNG" class="text-2xl font-bold text-rose-600">0</span>
+                        <span id="kpiPPM" class="text-xs block text-rose-500 font-medium">0 PPM</span>
+                    </div>
+                    <span class="text-xs text-gray-500">ชิ้น</span>
+                </div>
+            </div>
+
+            <!-- Achievement Card -->
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">% บรรลุเป้าหมาย</span>
+                    <span class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i class="fa-solid fa-award"></i></span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="kpiAchieve" class="text-2xl font-bold text-gray-800">0%</span>
+                    <span id="kpiDiff" class="text-xs font-medium text-gray-500">Diff: 0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Bar Chart -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-blue-500"></i> เปรียบเทียบ Plan vs Actual แยกตามไลน์ผลิต
+                    </h2>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="planVsActualChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Quality Donut Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-pie-chart text-emerald-500"></i> สัดส่วนคุณภาพ (OK vs NG)
+                    </h2>
+                </div>
+                <div class="h-64 relative flex items-center justify-center">
+                    <canvas id="qualityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Entry & Table Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Entry Form Form -->
+            <div class="lg:col-span-1 bg-white rounded-xl shadow-sm p-5 border border-gray-200 h-fit">
+                <div class="flex items-center justify-between border-b pb-3 mb-4">
+                    <h2 id="formTitle" class="font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-square-plus text-indigo-500"></i> บันทึกข้อมูลการผลิต
+                    </h2>
+                    <button id="cancelEditBtn" onclick="resetForm()" class="hidden text-xs text-rose-600 hover:underline">ยกเลิกแก้ไข</button>
+                </div>
+
+                <form id="prodForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+                    <input type="hidden" id="editId" value="">
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">วันที่ผลิต *</label>
+                        <input type="date" id="inputDate" required class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">กะ (Shift) *</label>
+                            <select id="inputShift" required class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="Day">Day (กะเช้า)</option>
+                                <option value="Night">Night (กะดึก)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">ไลน์ / เครื่องจักร *</label>
+                            <input type="text" id="inputLine" placeholder="เช่น Line 1" required class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">ชื่อ/รหัสชิ้นงาน (Part Name / No.) *</label>
+                        <input type="text" id="inputPart" placeholder="เช่น Tube Shaft No.1" required class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">แผน (Plan) *</label>
+                            <input type="number" id="inputPlan" min="0" required placeholder="0" class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">ผลิตจริง *</label>
+                            <input type="number" id="inputActual" min="0" required placeholder="0" class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-rose-600 mb-1">เสีย (NG) *</label>
+                            <input type="number" id="inputNG" min="0" value="0" required class="w-full text-sm border border-rose-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">สาเหตุ/หมายเหตุ (กรณีไม่ได้ตามแผน หรือมี NG)</label>
+                        <textarea id="inputRemark" rows="2" placeholder="เช่น เครื่องจักรหยุดขัดข้อง 15 นาที, เปลี่ยนโมลด์" class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition shadow flex items-center justify-center gap-2 mt-2">
+                        <i class="fa-solid fa-save"></i> บันทึกข้อมูล
+                    </button>
+                </form>
+            </div>
+
+            <!-- Data Table -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-5 border border-gray-200 flex flex-col justify-between">
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 mb-4 gap-2">
+                        <h2 class="font-bold text-gray-700 flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-slate-600"></i> รายการบันทึกการผลิต
+                        </h2>
+                        
+                        <!-- Search & Filter Controls -->
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="searchInput" oninput="renderTable()" placeholder="ค้นหา Part / Line..." class="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none w-36 sm:w-48">
+                            <select id="filterLine" onchange="renderTable()" class="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                                <option value="ALL">ทุกไลน์ผลิต</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Table Container -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold uppercase">
+                                    <th class="p-2.5">วันที่/กะ</th>
+                                    <th class="p-2.5">ไลน์ / Part Name</th>
+                                    <th class="p-2.5 text-right">Plan</th>
+                                    <th class="p-2.5 text-right">Actual</th>
+                                    <th class="p-2.5 text-right">OK / NG</th>
+                                    <th class="p-2.5 text-right">Diff</th>
+                                    <th class="p-2.5 text-center">% Achieved</th>
+                                    <th class="p-2.5 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productionTableBody" class="divide-y divide-gray-100">
+                                <!-- Table rows will be rendered here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Footer Summary inside table card -->
+                <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                    <span id="recordCount">แสดง 0 รายการ</span>
+                    <button onclick="clearAllData()" class="text-rose-500 hover:text-rose-700 font-medium">
+                        <i class="fa-regular fa-trash-can"></i> ล้างข้อมูลทั้งหมด
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // Global Data Store
+        let records = JSON.parse(localStorage.getItem('plan_vs_actual_db')) || [];
